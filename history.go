@@ -1,6 +1,7 @@
 package wall_street
 
 import (
+	"container/ring"
 	"errors"
 	"time"
 )
@@ -27,43 +28,62 @@ type HistEntry struct {
 */
 // global state is fun, no?
 var (
-	the_history []*HistEntry
-	history_offset int
+	the_history *ring.Ring
 )
+
+// TODO: replace me with a constructor that wraps these package vars
+func init() {
+	ResetHistory()
+}
 
 /* Return the current history array.  The caller has to be careful, since this
    is the actual array of data, and could be bashed or made corrupt easily.
    The array is terminated with a NULL pointer. */
 func HistoryList() (history []*HistEntry) {
-	return the_history
+	the_history.Do(func(h interface{}) {
+		history = append(history, h.(*HistEntry))
+	})
+
+	return
 }
 
-// FIXME: should probably return nil or an error if offset is bad
+// addition: just resets the world for test purposes
+func ResetHistory() {
+	the_history = ring.New(1)
+	return
+}
+
 func CurrentHistory() *HistEntry {
-	return the_history[history_offset]
+	if the_history.Len() == 0 {
+		return nil
+	}
+
+	entry, ok := the_history.Move(0).Value.(*HistEntry)
+	if !ok {
+		return nil
+	} else {
+		return entry
+	}
 }
 
 /* Back up history_offset to the previous history entry, and return
    a pointer to that entry.  If there is no previous entry then return
    a NULL pointer. */
 func PreviousHistory() *HistEntry {
-	history_offset--  // FIXME: bounds checking or ring buffer
-	return the_history[history_offset]
+	return the_history.Move(-1).Value.(*HistEntry)
 }
 
 /* Move history_offset forward to the next history entry, and return
    a pointer to that entry.  If there is no next entry then return a
-   NULL pointer. */
+   nil pointer. */
 func NextHistory() *HistEntry {
-	history_offset++ // FIXME: bounds checking or ring buffer
-	return the_history[history_offset]
+	return the_history.Move(1).Value.(*HistEntry)
 }
 
 /* Return the history entry which is logically at OFFSET in the history array.
    OFFSET is relative to history_base. */
 func HistoryGet(offset int) *HistEntry {
-	// FIXME: wtf history_base ???
-	return the_history[offset] // FIXME: bounds checking or ring buffer
+	return the_history.Move(offset).Value.(*HistEntry)
 }
 
 func HistoryGetTime(history *HistEntry) time.Time {
@@ -71,14 +91,21 @@ func HistoryGetTime(history *HistEntry) time.Time {
 }
 
 func AddHistory(input string) {
-	if len(the_history) == historyMaxEntries {
-		the_history = the_history[1:]
+	if the_history.Len() == historyMaxEntries {
+		the_history.Unlink(1)
 	}
 
 	newEntry := new(HistEntry)
 	newEntry.Line = input
 	newEntry.Timestamp = time.Now().Unix()
-	the_history = append(the_history, newEntry)
+
+	if the_history.Len() == 1 {
+		the_history.Value = newEntry
+	} else {
+		newLink := ring.New(1)
+		newLink.Value = newEntry
+		the_history.Link(newLink)
+	}
 }
 
 // NOT IMPLEMENTED
@@ -87,13 +114,14 @@ func AddHistory(input string) {
 // func CopyHistoryEntry(history HistEntry)
 
 /* Make the history entry at WHICH have LINE and DATA.*/
+// nb: `which` offset is now relative to current history **BREAKING CHANGE**
 func ReplaceHistoryEntry(which int, line string, data interface{}) (err error) {
-	if which < 0 || which >= len(the_history) {
+	if which < 0 || which >= the_history.Len() {
 		err = errors.New("invalid history offset")
 		return
 	}
 
-	history := the_history[which]
+	history := the_history.Move(which).Value.(*HistEntry)
 	history.Line = line
 	history.Data = data
 	return
@@ -106,29 +134,36 @@ func ReplaceHistoryEntry(which int, line string, data interface{}) (err error) {
    all of the history entries where entry->data == OLD; WHICH == -2 means
    to replace the `newest' history entry where entry->data == OLD; and
    WHICH >= 0 means to replace that particular history entry's data, as
-   long as it matches OLD. */
+long as it matches OLD. */
+// nb: `which` offset is now relative to current history **BREAKING CHANGE**
 func ReplaceHistoryData(which int, oldData, newData interface{}) (err error) {
-	if which < -2 || which >= len(the_history) {
+	if which < -2 || which >= the_history.Len() {
 		err = errors.New("invalid history offset")
 		return
 	}
 
 	if which >= 0 {
-		history := the_history[which]
+		history := the_history.Move(which).Value.(*HistEntry)
 		if history.Data == oldData {
 			history.Data = newData
 		}
 
 	} else if which == -1 {
-		for _, entry := range the_history {
+		the_history.Do(func(value interface{}) {
+			entry, ok := value.(*HistEntry)
+			if !ok {
+				return
+			}
+
 			if entry.Data == oldData {
 				entry.Data = newData
 			}
-		}
+		})
 	} else if which == -2 {
-		for i := len(the_history); i >= 0; i++ {
-			if the_history[i].Data == oldData {
-				the_history[i].Data = newData
+		for i := the_history.Len(); i >= 0; i++ {
+			entry := the_history.Move(-1).Value.(*HistEntry)
+			if entry.Data == oldData {
+				entry.Data = newData
 				break
 			}
 		}

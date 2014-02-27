@@ -7,6 +7,10 @@ import (
 )
 
 var _ = Describe("History", func() {
+	BeforeEach(func() {
+		ResetHistory()
+	})
+
 	Describe("adding history", func() {
 		BeforeEach(func() {
 			AddHistory("do not adjust your television")
@@ -22,6 +26,12 @@ var _ = Describe("History", func() {
 
 		It("should store a date", func() {
 			Expect(CurrentHistory().Timestamp).ToNot(Equal(0))
+		})
+	})
+
+	Describe("navigating history", func() {
+		It("should initially be nil", func() {
+			Expect(CurrentHistory()).To(BeNil())
 		})
 	})
 })
