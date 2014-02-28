@@ -33,5 +33,24 @@ var _ = Describe("History", func() {
 		It("should initially be nil", func() {
 			Expect(CurrentHistory()).To(BeNil())
 		})
+
+		Context("with history", func() {
+			BeforeEach(func() {
+				AddHistory("This is not a test...")
+				AddHistory("There is nothing wrong with your television")
+			})
+
+			It("should navigate to older history", func() {
+				Expect(CurrentHistory().Line).To(Equal("There is nothing wrong with your television"))
+				Expect(PreviousHistory().Line).To(Equal("This is not a test..."))
+			})
+
+			It("should navigate to more recent history", func() {
+				AddHistory("We are controlling transmission")
+				PreviousHistory()
+
+				Expect(NextHistory().Line).To(Equal("We are controlling transmission"))
+			})
+		})
 	})
 })

@@ -28,7 +28,9 @@ type HistEntry struct {
 */
 // global state is fun, no?
 var (
-	the_history *ring.Ring
+	theHistory *ring.Ring
+	currentHistory **ring.Ring
+	oldestHistory **ring.Ring
 )
 
 // TODO: replace me with a constructor that wraps these package vars
@@ -40,7 +42,7 @@ func init() {
    is the actual array of data, and could be bashed or made corrupt easily.
    The array is terminated with a NULL pointer. */
 func HistoryList() (history []*HistEntry) {
-	the_history.Do(func(h interface{}) {
+	theHistory.Do(func(h interface{}) {
 		history = append(history, h.(*HistEntry))
 	})
 
@@ -49,16 +51,17 @@ func HistoryList() (history []*HistEntry) {
 
 // addition: just resets the world for test purposes
 func ResetHistory() {
-	the_history = ring.New(1)
+	theHistory = ring.New(0)
+	oldestHistory = &theHistory
 	return
 }
 
 func CurrentHistory() *HistEntry {
-	if the_history.Len() == 0 {
+	if theHistory.Len() == 0 {
 		return nil
 	}
 
-	entry, ok := the_history.Move(0).Value.(*HistEntry)
+	entry, ok := (*currentHistory).Value.(*HistEntry)
 	if !ok {
 		return nil
 	} else {
@@ -70,20 +73,24 @@ func CurrentHistory() *HistEntry {
    a pointer to that entry.  If there is no previous entry then return
    a NULL pointer. */
 func PreviousHistory() *HistEntry {
-	return the_history.Move(-1).Value.(*HistEntry)
+	prev := (*currentHistory).Prev()
+	currentHistory = &prev
+	return (*currentHistory).Value.(*HistEntry)
 }
 
 /* Move history_offset forward to the next history entry, and return
    a pointer to that entry.  If there is no next entry then return a
    nil pointer. */
 func NextHistory() *HistEntry {
-	return the_history.Move(1).Value.(*HistEntry)
+	next := (*currentHistory).Next()
+	currentHistory = &next
+	return (*currentHistory).Value.(*HistEntry)
 }
 
 /* Return the history entry which is logically at OFFSET in the history array.
    OFFSET is relative to history_base. */
 func HistoryGet(offset int) *HistEntry {
-	return the_history.Move(offset).Value.(*HistEntry)
+	return theHistory.Move(offset).Value.(*HistEntry)
 }
 
 func HistoryGetTime(history *HistEntry) time.Time {
@@ -91,20 +98,24 @@ func HistoryGetTime(history *HistEntry) time.Time {
 }
 
 func AddHistory(input string) {
-	if the_history.Len() == historyMaxEntries {
-		the_history.Unlink(1)
+	// FIXME: should remove the oldest entry
+	if theHistory.Len() == historyMaxEntries {
+		theHistory.Unlink(1)
 	}
 
 	newEntry := new(HistEntry)
 	newEntry.Line = input
 	newEntry.Timestamp = time.Now().Unix()
 
-	if the_history.Len() == 1 {
-		the_history.Value = newEntry
+	if theHistory.Len() == 0 {
+		theHistory = ring.New(1)
+		theHistory.Value = newEntry
+		currentHistory = &theHistory
 	} else {
 		newLink := ring.New(1)
 		newLink.Value = newEntry
-		the_history.Link(newLink)
+		theHistory.Link(newLink)
+		currentHistory = &newLink
 	}
 }
 
@@ -116,12 +127,12 @@ func AddHistory(input string) {
 /* Make the history entry at WHICH have LINE and DATA.*/
 // nb: `which` offset is now relative to current history **BREAKING CHANGE**
 func ReplaceHistoryEntry(which int, line string, data interface{}) (err error) {
-	if which < 0 || which >= the_history.Len() {
+	if which < 0 || which >= theHistory.Len() {
 		err = errors.New("invalid history offset")
 		return
 	}
 
-	history := the_history.Move(which).Value.(*HistEntry)
+	history := theHistory.Move(which).Value.(*HistEntry)
 	history.Line = line
 	history.Data = data
 	return
@@ -137,19 +148,19 @@ func ReplaceHistoryEntry(which int, line string, data interface{}) (err error) {
 long as it matches OLD. */
 // nb: `which` offset is now relative to current history **BREAKING CHANGE**
 func ReplaceHistoryData(which int, oldData, newData interface{}) (err error) {
-	if which < -2 || which >= the_history.Len() {
+	if which < -2 || which >= theHistory.Len() {
 		err = errors.New("invalid history offset")
 		return
 	}
 
 	if which >= 0 {
-		history := the_history.Move(which).Value.(*HistEntry)
+		history := theHistory.Move(which).Value.(*HistEntry)
 		if history.Data == oldData {
 			history.Data = newData
 		}
 
 	} else if which == -1 {
-		the_history.Do(func(value interface{}) {
+		theHistory.Do(func(value interface{}) {
 			entry, ok := value.(*HistEntry)
 			if !ok {
 				return
@@ -160,8 +171,8 @@ func ReplaceHistoryData(which int, oldData, newData interface{}) (err error) {
 			}
 		})
 	} else if which == -2 {
-		for i := the_history.Len(); i >= 0; i++ {
-			entry := the_history.Move(-1).Value.(*HistEntry)
+		for i := theHistory.Len(); i >= 0; i++ {
+			entry := theHistory.Move(-1).Value.(*HistEntry)
 			if entry.Data == oldData {
 				entry.Data = newData
 				break
