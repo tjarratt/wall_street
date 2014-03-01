@@ -132,7 +132,7 @@ func ReplaceHistoryEntry(which int, line string, data interface{}) (err error) {
 		return
 	}
 
-	history := theHistory.Move(which).Value.(*HistEntry)
+	history := currentHistory.Move(which).Value.(*HistEntry)
 	history.Line = line
 	history.Data = data
 	return

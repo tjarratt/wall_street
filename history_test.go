@@ -70,4 +70,21 @@ var _ = Describe("History", func() {
 			Expect(HistoryGet(0).Line).To(Equal("we will bring up the volume"))
 		})
 	})
+
+	Describe("overwriting history", func() {
+		BeforeEach(func() {
+			AddHistory("if we wish to make it softer")
+			ReplaceHistoryEntry(0, "we will tune it to a whisper", nil)
+		})
+
+		It("should replace the line", func() {
+			Expect(CurrentHistory().Line).To(Equal("we will tune it to a whisper"))
+		})
+
+		It("should be relative to current history", func() {
+			AddHistory("We will control the horizontal")
+			ReplaceHistoryEntry(0, "We will control the vertical", nil)
+			Expect(CurrentHistory().Line).To(Equal("We will control the vertical"))
+		})
+	})
 })
