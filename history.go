@@ -90,7 +90,7 @@ func NextHistory() *HistEntry {
 /* Return the history entry which is logically at OFFSET in the history array.
    OFFSET is relative to history_base. */
 func HistoryGet(offset int) *HistEntry {
-	return theHistory.Move(offset).Value.(*HistEntry)
+	return currentHistory.Move(offset).Value.(*HistEntry)
 }
 
 func HistoryGetTime(history *HistEntry) time.Time {

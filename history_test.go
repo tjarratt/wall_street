@@ -53,4 +53,21 @@ var _ = Describe("History", func() {
 			})
 		})
 	})
+
+	Describe("getting history by index", func() {
+		BeforeEach(func() {
+			AddHistory("if we wish to make it louder")
+			AddHistory("we will bring up the volume")
+			PreviousHistory() // back to the first
+		})
+
+		It("should return the line with that index", func() {
+			Expect(HistoryGet(0).Line).To(Equal("if we wish to make it louder"))
+		})
+
+		It("should be relative to current history", func() {
+			NextHistory()
+			Expect(HistoryGet(0).Line).To(Equal("we will bring up the volume"))
+		})
+	})
 })
