@@ -114,7 +114,7 @@ func AddHistory(input string) {
 	} else {
 		newLink := ring.New(1)
 		newLink.Value = newEntry
-		theHistory.Link(newLink)
+		(*currentHistory).Link(newLink)
 		currentHistory = &newLink
 	}
 }
@@ -127,11 +127,6 @@ func AddHistory(input string) {
 /* Make the history entry at WHICH have LINE and DATA.*/
 // nb: `which` offset is now relative to current history **BREAKING CHANGE**
 func ReplaceHistoryEntry(which int, line string, data interface{}) (err error) {
-	if which < 0 || which >= theHistory.Len() {
-		err = errors.New("invalid history offset")
-		return
-	}
-
 	history := currentHistory.Move(which).Value.(*HistEntry)
 	history.Line = line
 	history.Data = data
@@ -180,5 +175,16 @@ func ReplaceHistoryData(which int, oldData, newData interface{}) (err error) {
 		}
 	}
 
+	return
+}
+
+// Remove history element WHICH from the history
+func RemoveHistory(which int) {
+	toBeRemoved := currentHistory.Move(which)
+	prev := toBeRemoved.Prev()
+	next := toBeRemoved.Next()
+
+	prev.Link(next)
+	currentHistory = &prev
 	return
 }

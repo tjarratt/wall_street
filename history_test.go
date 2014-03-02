@@ -29,6 +29,38 @@ var _ = Describe("History", func() {
 		})
 	})
 
+	Describe("reading history as a slice", func() {
+		var expectedHistory []string
+
+		BeforeEach(func() {
+			AddHistory("The Devil in the Dark")
+			AddHistory("The Sixth Finger")
+			AddHistory("The Conscience of the King")
+
+			expectedHistory = []string{
+				"The Devil in the Dark",
+				"The Sixth Finger",
+				"The Conscience of the King",
+			}
+		})
+
+		It("should match the history list", func() {
+			// navigate forward one step to get back to the beginning
+			NextHistory()
+
+			Expect(historyListToStrings()).To(Equal(expectedHistory))
+		})
+
+		It("should match the history as you walk over it", func() {
+			readHistory := []string{}
+			for i := 0; i < len(expectedHistory); i++ {
+				readHistory = append(readHistory, NextHistory().Line)
+			}
+
+			Expect(readHistory).To(Equal(expectedHistory))
+		})
+	})
+
 	Describe("navigating history", func() {
 		It("should initially be nil", func() {
 			Expect(CurrentHistory()).To(BeNil())
@@ -87,4 +119,40 @@ var _ = Describe("History", func() {
 			Expect(CurrentHistory().Line).To(Equal("We will control the vertical"))
 		})
 	})
+
+	Describe("removing history", func() {
+		BeforeEach(func() {
+			AddHistory("We will now return control of your television set to you")
+			AddHistory("Until next week at the same time, when the control voice will take you to...")
+			AddHistory("The Outer Limits")
+			NextHistory()
+
+			Expect(len(HistoryList())).To(Equal(3))
+			Expect(CurrentHistory().Line).To(Equal("We will now return control of your television set to you"))
+		})
+
+		It("removes the history element at the given index", func() {
+			RemoveHistory(1)
+			Expect(len(HistoryList())).To(Equal(2))
+			Expect(CurrentHistory().Line).To(Equal("We will now return control of your television set to you"))
+			Expect(NextHistory().Line).To(Equal("The Outer Limits"))
+		})
+
+		It("is relative to current history", func() {
+			RemoveHistory(-1)
+			Expect(historyListToStrings()).To(Equal([]string{
+				"We will now return control of your television set to you",
+				"Until next week at the same time, when the control voice will take you to...",
+			}))
+		})
+	})
 })
+
+func historyListToStrings() []string {
+	list := []string{}
+	history := HistoryList()
+	for i := 0; i < len(history); i++ {
+		list = append(list, history[i].Line)
+	}
+	return list
+}
