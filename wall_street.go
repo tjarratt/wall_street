@@ -1,29 +1,25 @@
 package wall_street
 
-// enums.go
-type UndoEnum int
-const (
-	undoDelete UndoEnum = iota
-	undoInsert UndoEnum = iota
-	undoBegin UndoEnum = iota
-	undoEnd UndoEnum = iota
-)
+func Readline(prompt string) (value string) {
+	setPrompt(prompt)
+	// if function pointer (rl_prep_term_function) { call it with rl_meta_flag) }
+	// rl_set_signals (if handle_signals is defined)
+	// value := readline_internal()
+	// if function pointer (rl_deprep_term_function) { // call it }
+	// rl_clear_signals (if handle_signals was defined)
 
-type UndoList struct {
-	next *UndoList
-	start int // where the change took place
-	end int
-	text string // text to insert, if undoing a delete
-	what UndoEnum
+	return value
 }
 
-// the current undo list for the RL_LINE_BUFFER
-var rl_undo_list *UndoList
+var thePrompt string // ugh global state again???
+func setPrompt(prompt string) {
+	thePrompt = prompt
+	return
+}
 
-// data structure for mapping textual names to code addresses
-type FunMap struct {
-	name string
-	rlCommandFunc func() // rl_command_func_t
+// takes the place of rl_initialize
+func init() {
+
 }
 
 // /* **************************************************************** */
