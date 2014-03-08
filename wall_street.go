@@ -1,12 +1,18 @@
 package wall_street
 
+import (
+	"wall_street/tty"
+)
+
 func Readline(prompt string) (value string) {
 	setPrompt(prompt)
+
 	// if function pointer (rl_prep_term_function) { call it with rl_meta_flag) }
-	// rl_set_signals (if handle_signals is defined)
-	// value := readline_internal()
-	// if function pointer (rl_deprep_term_function) { // call it }
-	// rl_clear_signals (if handle_signals was defined)
+	tty.PrepTermMode()
+	setSignals()
+	value = readlineInternal()
+	tty.DePrepTermMode()
+	clearSignals()
 
 	return value
 }
@@ -19,7 +25,18 @@ func setPrompt(prompt string) {
 
 // takes the place of rl_initialize
 func init() {
+}
 
+func setSignals() {
+
+}
+
+func clearSignals() {
+
+}
+
+func readlineInternal() string {
+	return ""
 }
 
 // /* **************************************************************** */
