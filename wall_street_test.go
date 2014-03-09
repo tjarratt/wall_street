@@ -10,8 +10,10 @@ import (
 var _ = Describe("Wall Street", func() {
 	Describe("Readline", func() {
 
-		It("it reads from stdin and returns a string", func() {
+		It("it reads from a pipe and returns a string", func() {
 			simulateSTDIN("The return of the Archons", func(r io.Reader) {
+				wall_street.SetReadPipe(r)
+
 				readline := wall_street.Readline("Tonight on The Outer Limits")
 				Expect(readline).To(Equal("The return of the Archons"))
 			})

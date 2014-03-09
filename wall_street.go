@@ -1,8 +1,15 @@
 package wall_street
 
 import (
+	"io"
+	"os"
 	"wall_street/tty"
 )
+
+var reader io.Reader = os.Stdin
+func SetReadPipe(r io.Reader) {
+	reader = r
+}
 
 func Readline(prompt string) (value string) {
 	setPrompt(prompt)
@@ -36,7 +43,9 @@ func clearSignals() {
 }
 
 func readlineInternal() string {
-	return ""
+	buffer := make([]byte, 1000)
+	bytesRead, _ := reader.Read(buffer)
+	return string(buffer[0:bytesRead])
 }
 
 // /* **************************************************************** */
