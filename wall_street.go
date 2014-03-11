@@ -1,14 +1,30 @@
 package wall_street
 
 import (
+	"bytes"
 	"io"
 	"os"
 	"wall_street/tty"
 )
 
 var reader io.Reader = os.Stdin
+var writer io.Writer = os.Stdout
+
 func SetReadPipe(r io.Reader) {
 	reader = r
+}
+
+func SetWritePipe(w io.Writer) {
+	writer = w
+}
+
+var echoToStdout bool = true
+func DisableEcho() {
+	echoToStdout = false
+}
+
+func EnableEcho() {
+	echoToStdout = true
 }
 
 func Readline(prompt string) (value string) {
@@ -30,10 +46,6 @@ func setPrompt(prompt string) {
 	return
 }
 
-// takes the place of rl_initialize
-func init() {
-}
-
 func setSignals() {
 
 }
@@ -43,9 +55,15 @@ func clearSignals() {
 }
 
 func readlineInternal() string {
-	buffer := make([]byte, 1000)
-	bytesRead, _ := reader.Read(buffer)
-	return string(buffer[0:bytesRead])
+	var buf bytes.Buffer
+	io.Copy(&buf, reader)
+
+	str := buf.String()
+	if echoToStdout {
+		writer.Write([]byte(str))
+	}
+
+	return str
 }
 
 // /* **************************************************************** */
