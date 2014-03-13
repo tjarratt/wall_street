@@ -7,6 +7,20 @@ import (
 	"wall_street/tty"
 )
 
+type ReadlineReader struct {
+	reader       io.Reader
+	writer       io.Writer
+	echoToStdout bool
+}
+
+func NewReadline() ReadlineReader {
+	return ReadlineReader{
+		reader:       os.Stdin,
+		writer:       os.Stdout,
+		echoToStdout: true,
+	}
+}
+
 var reader io.Reader = os.Stdin
 var writer io.Writer = os.Stdout
 
@@ -19,6 +33,7 @@ func SetWritePipe(w io.Writer) {
 }
 
 var echoToStdout bool = true
+
 func DisableEcho() {
 	echoToStdout = false
 }
@@ -210,8 +225,6 @@ func readlineInternal() string {
 // extern void rl_callback_read_char PARAMS((void));
 // extern void rl_callback_handler_remove PARAMS((void));
 
-
-
 // /* **************************************************************** */
 // /*								    */
 // /*			Well Published Functions		    */
@@ -226,8 +239,6 @@ func readlineInternal() string {
 // extern int rl_expand_prompt PARAMS((char *));
 
 // extern int rl_initialize PARAMS((void));
-
-
 
 // /* Utility functions to bind keys to readline commands. */
 // extern int rl_add_defun PARAMS((const char *, rl_command_func_t *, int));
@@ -248,8 +259,6 @@ func readlineInternal() string {
 // extern char *rl_variable_value PARAMS((const char *));
 // extern int rl_variable_bind PARAMS((const char *, const char *));
 
-
-
 // /* Functions for manipulating keymaps. */
 // extern Keymap rl_make_bare_keymap PARAMS((void));
 // extern Keymap rl_copy_keymap PARAMS((Keymap));
@@ -261,7 +270,6 @@ func readlineInternal() string {
 // extern void rl_set_keymap PARAMS((Keymap));
 // extern Keymap rl_get_keymap PARAMS((void));
 
-
 // /* Functions for manipulating the funmap, which maps command names to functions. */
 // extern int rl_add_funmap_entry PARAMS((const char *, rl_command_func_t *));
 // extern const char **rl_funmap_names PARAMS((void));
@@ -269,12 +277,8 @@ func readlineInternal() string {
 //    function may be called only once. */
 // extern void rl_initialize_funmap PARAMS((void));
 
-
-
 // /* Utility functions for managing keyboard macros. */
 // extern void rl_push_macro_input PARAMS((char *));
-
-
 
 // /* Functions for undoing, from undo.c */
 // extern void rl_add_undo PARAMS((enum undo_code, int, int, char *));
@@ -283,8 +287,6 @@ func readlineInternal() string {
 // extern int rl_begin_undo_group PARAMS((void));
 // extern int rl_end_undo_group PARAMS((void));
 // extern int rl_modifying PARAMS((int, int));
-
-
 
 // /* Functions for redisplay. */
 // extern void rl_redisplay PARAMS((void));
@@ -311,7 +313,6 @@ func readlineInternal() string {
 // extern int rl_delete_text PARAMS((int, int));
 // extern int rl_kill_text PARAMS((int, int));
 // extern char *rl_copy_text PARAMS((int, int));
-
 
 // /* Readline signal handling, from signals.c */
 // extern int rl_set_signals PARAMS((void));

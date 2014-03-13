@@ -1,9 +1,9 @@
 package wall_street_test
 
 import (
-	. "wall_street"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	. "wall_street"
 )
 
 var _ = Describe("History", func() {

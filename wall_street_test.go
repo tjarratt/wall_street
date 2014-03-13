@@ -2,12 +2,12 @@ package wall_street_test
 
 import (
 	"bytes"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 	"io"
 	"os"
 	"strings"
 	"wall_street"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Wall Street", func() {

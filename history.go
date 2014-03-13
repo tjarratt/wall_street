@@ -9,14 +9,14 @@ import (
 const historyMaxEntries = 512 // should be enough for anyone
 
 type HistEntry struct {
-	Line string
+	Line      string
 	Timestamp int64
-	Data interface{} // histdata_t #ifdef to void* or char*
+	Data      interface{} // histdata_t #ifdef to void* or char*
 }
 
 /*
-  ** UNIMPLEMENTED **
-*/
+ ** UNIMPLEMENTED **
+ */
 // get, set history state
 // using_history
 // history_total_bytes
@@ -24,13 +24,13 @@ type HistEntry struct {
 // history_set_pos
 
 /*
-  ** Implementation Ahoy **
-*/
+ ** Implementation Ahoy **
+ */
 // global state is fun, no?
 var (
-	theHistory *ring.Ring
+	theHistory     *ring.Ring
 	currentHistory **ring.Ring
-	oldestHistory **ring.Ring
+	oldestHistory  **ring.Ring
 )
 
 // TODO: replace me with a constructor that wraps these package vars
