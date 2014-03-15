@@ -9,42 +9,33 @@ import(
   "wall_street"
 )
 
-func SimulatePipes(input string, block func(r io.Reader)) []string {
-	originalPipe := os.Stdin
-	reader, writer, err := os.Pipe()
+func SimulatePipes(reader *wall_street.ReadlineReader, input string, block func()) []string {
+	in, out, err := os.Pipe()
 	Expect(err).NotTo(HaveOccurred())
-
-	os.Stdin = reader
-	defer func() {
-		os.Stdin = originalPipe
-	}()
+	reader.SetReadPipe(in)
 
 	go func() {
-		defer writer.Close()
-		writer.Write([]byte(input))
+		defer out.Close()
+		out.Write([]byte(input))
 	}()
 
-	return CaptureSTDOUT(func() { block(reader) })
+	return CaptureSTDOUT(reader, func() { block() })
 }
 
-func CaptureSTDOUT(block func()) []string {
-	originalPipe := os.Stdout
-	reader, writer, err := os.Pipe()
+func CaptureSTDOUT(reader *wall_street.ReadlineReader, block func()) []string {
+	in, out, err := os.Pipe()
 	Expect(err).ToNot(HaveOccurred())
-	os.Stdout = writer
-	wall_street.SetWritePipe(writer)
 
-	defer func() {
-		os.Stdout = originalPipe
-		wall_street.SetWritePipe(originalPipe)
-	}()
+
+	reader.SetWritePipe(out)
 
 	block()
-	writer.Close()
+	out.Close()
 
 	var buf bytes.Buffer
-	io.Copy(&buf, reader)
+	io.Copy(&buf, in)
 	if len(buf.String()) == 0 {
+		println("SAD TROMBONE")
 		return []string{}
 	}
 

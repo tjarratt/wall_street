@@ -13,23 +13,20 @@ type ReadlineReader struct {
 	echoToStdout bool
 }
 
-func NewReadline() ReadlineReader {
-	return ReadlineReader{
+func NewReadline() *ReadlineReader {
+	return &ReadlineReader{
 		reader:       os.Stdin,
 		writer:       os.Stdout,
 		echoToStdout: true,
 	}
 }
 
-var reader io.Reader = os.Stdin
-var writer io.Writer = os.Stdout
-
-func SetReadPipe(r io.Reader) {
-	reader = r
+func (rl *ReadlineReader) SetReadPipe(r io.Reader) {
+	rl.reader = r
 }
 
-func SetWritePipe(w io.Writer) {
-	writer = w
+func (rl *ReadlineReader) SetWritePipe(w io.Writer) {
+	rl.writer = w
 }
 
 var echoToStdout bool = true
@@ -42,13 +39,13 @@ func EnableEcho() {
 	echoToStdout = true
 }
 
-func Readline(prompt string) (value string) {
+func (rl *ReadlineReader) Readline(prompt string) (value string) {
 	setPrompt(prompt)
 
 	// if function pointer (rl_prep_term_function) { call it with rl_meta_flag) }
 	tty.PrepTermMode()
 	setSignals()
-	value = readlineInternal()
+	value = rl.readlineInternal()
 	tty.DePrepTermMode()
 	clearSignals()
 
@@ -69,13 +66,13 @@ func clearSignals() {
 
 }
 
-func readlineInternal() string {
+func (rl ReadlineReader) readlineInternal() string {
 	var buf bytes.Buffer
-	io.Copy(&buf, reader)
+	io.Copy(&buf, rl.reader)
 
 	str := buf.String()
 	if echoToStdout {
-		writer.Write([]byte(str))
+		rl.writer.Write([]byte(str))
 	}
 
 	return str
