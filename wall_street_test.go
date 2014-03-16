@@ -34,10 +34,7 @@ var _ = Describe("Wall Street", func() {
 			})
 
 			It("can be suppressed", func() {
-				DisableEcho() // TODO: put on reader
-				defer func() {
-					EnableEcho()
-				}()
+				reader.DisableEcho()
 
 				output := SimulatePipes(reader, "Where No Man Has Gone Before", func() {
 					reader.Readline("Tonight on The Outer Limits")

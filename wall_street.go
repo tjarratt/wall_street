@@ -29,14 +29,12 @@ func (rl *ReadlineReader) SetWritePipe(w io.Writer) {
 	rl.writer = w
 }
 
-var echoToStdout bool = true
-
-func DisableEcho() {
-	echoToStdout = false
+func (rl *ReadlineReader) DisableEcho() {
+	rl.echoToStdout = false
 }
 
-func EnableEcho() {
-	echoToStdout = true
+func (rl *ReadlineReader) EnableEcho() {
+	rl.echoToStdout = true
 }
 
 func (rl *ReadlineReader) Readline(prompt string) (value string) {
@@ -71,7 +69,7 @@ func (rl ReadlineReader) readlineInternal() string {
 	io.Copy(&buf, rl.reader)
 
 	str := buf.String()
-	if echoToStdout {
+	if rl.echoToStdout {
 		rl.writer.Write([]byte(str))
 	}
 
