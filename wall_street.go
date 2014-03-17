@@ -10,7 +10,9 @@ import (
 type ReadlineReader struct {
 	reader       io.Reader
 	writer       io.Writer
+
 	echoToStdout bool
+	echoPrompt   bool
 	prompt       string
 }
 
@@ -19,6 +21,7 @@ func NewReadline() *ReadlineReader {
 		reader:       os.Stdin,
 		writer:       os.Stdout,
 		echoToStdout: true,
+		echoPrompt:   true,
 	}
 }
 
@@ -36,6 +39,14 @@ func (rl *ReadlineReader) DisableEcho() {
 
 func (rl *ReadlineReader) EnableEcho() {
 	rl.echoToStdout = true
+}
+
+func (rl *ReadlineReader) DisablePrompt() {
+	rl.echoPrompt = false
+}
+
+func (rl *ReadlineReader) EnablePrompt() {
+	rl.echoPrompt = true
 }
 
 func (rl *ReadlineReader) Readline(prompt string) (value string) {
@@ -63,16 +74,23 @@ func (rl ReadlineReader) readlineInternal() string {
 	// readline_internal_setup
 	// eof = readline_internal_charloop
 	// returns readline_internal_teardown(eof)
+	rl.readlineInternalSetup()
 
 	var buf bytes.Buffer
 	io.Copy(&buf, rl.reader)
 
 	str := buf.String()
 	if rl.echoToStdout {
-		rl.writer.Write([]byte(rl.prompt))
+		rl.writer.Write([]byte(str))
 	}
 
 	return str
+}
+
+func (rl ReadlineReader) readlineInternalSetup() {
+	if rl.echoPrompt {
+		rl.writer.Write([]byte(rl.prompt))
+	}
 }
 
 // /* **************************************************************** */

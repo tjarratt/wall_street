@@ -17,6 +17,10 @@ var _ = Describe("Wall Street", func() {
 	})
 
 	Describe("Readline", func() {
+		BeforeEach(func() {
+			reader.DisablePrompt()
+		})
+
 		It("reads from a pipe and returns a string", func() {
 			SimulatePipes(reader, "The return of the Archons", func() {
 				readline := reader.Readline("Tonight on The Outer Limits:")
@@ -30,7 +34,7 @@ var _ = Describe("Wall Street", func() {
 					reader.Readline("Tonight on The Outer Limits")
 				})
 
-				Expect(out).To(Equal([]string{"Tonight on The Outer Limits"}))
+				Expect(out).To(Equal([]string{"Where No Man Has Gone Before"}))
 			})
 
 			It("can be suppressed", func() {
@@ -41,6 +45,22 @@ var _ = Describe("Wall Street", func() {
 				})
 
 				Expect(output).To(Equal([]string{}))
+			})
+		})
+
+		Describe("The prompt", func() {
+			BeforeEach(func() {
+				reader.EnablePrompt()
+			})
+
+			It("is printed to stdout", func() {
+				reader.DisableEcho()
+
+				output := SimulatePipes(reader, "Lots of mutable state!", func() {
+					reader.Readline("Developer, what is best in life?")
+				})
+
+				Expect(output).To(Equal([]string{"Developer, what is best in life?"}))
 			})
 		})
 	})
