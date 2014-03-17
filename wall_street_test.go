@@ -30,7 +30,7 @@ var _ = Describe("Wall Street", func() {
 					reader.Readline("Tonight on The Outer Limits")
 				})
 
-				Expect(out).To(Equal([]string{"Where No Man Has Gone Before"}))
+				Expect(out).To(Equal([]string{"Tonight on The Outer Limits"}))
 			})
 
 			It("can be suppressed", func() {

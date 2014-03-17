@@ -11,6 +11,7 @@ type ReadlineReader struct {
 	reader       io.Reader
 	writer       io.Writer
 	echoToStdout bool
+	prompt       string
 }
 
 func NewReadline() *ReadlineReader {
@@ -38,7 +39,7 @@ func (rl *ReadlineReader) EnableEcho() {
 }
 
 func (rl *ReadlineReader) Readline(prompt string) (value string) {
-	setPrompt(prompt)
+	rl.prompt = prompt
 
 	// if function pointer (rl_prep_term_function) { call it with rl_meta_flag) }
 	tty.PrepTermMode()
@@ -50,12 +51,6 @@ func (rl *ReadlineReader) Readline(prompt string) (value string) {
 	return value
 }
 
-var thePrompt string // ugh global state again???
-func setPrompt(prompt string) {
-	thePrompt = prompt
-	return
-}
-
 func setSignals() {
 
 }
@@ -65,12 +60,16 @@ func clearSignals() {
 }
 
 func (rl ReadlineReader) readlineInternal() string {
+	// readline_internal_setup
+	// eof = readline_internal_charloop
+	// returns readline_internal_teardown(eof)
+
 	var buf bytes.Buffer
 	io.Copy(&buf, rl.reader)
 
 	str := buf.String()
 	if rl.echoToStdout {
-		rl.writer.Write([]byte(str))
+		rl.writer.Write([]byte(rl.prompt))
 	}
 
 	return str
