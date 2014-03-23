@@ -8,12 +8,16 @@ import (
 )
 
 type ReadlineReader struct {
-	reader       io.Reader
-	writer       io.Writer
+	reader io.Reader
+	writer io.Writer
 
 	echoToStdout bool
 	echoPrompt   bool
 	prompt       string
+
+	done bool
+
+	keySequenceLength int
 }
 
 func NewReadline() *ReadlineReader {
@@ -52,22 +56,13 @@ func (rl *ReadlineReader) EnablePrompt() {
 func (rl *ReadlineReader) Readline(prompt string) (value string) {
 	rl.prompt = prompt
 
-	// if function pointer (rl_prep_term_function) { call it with rl_meta_flag) }
 	tty.PrepTermMode()
-	setSignals()
+	rl.setSignals()
 	value = rl.readlineInternal()
 	tty.DePrepTermMode()
-	clearSignals()
+	rl.clearSignals()
 
 	return value
-}
-
-func setSignals() {
-
-}
-
-func clearSignals() {
-
 }
 
 func (rl ReadlineReader) readlineInternal() string {
@@ -75,6 +70,8 @@ func (rl ReadlineReader) readlineInternal() string {
 	// eof = readline_internal_charloop
 	// returns readline_internal_teardown(eof)
 	rl.readlineInternalSetup()
+	eof := rl.readlineInternalCharloop()
+	return rl.readlineInternalTeardown(eof)
 
 	var buf bytes.Buffer
 	io.Copy(&buf, rl.reader)
@@ -91,6 +88,178 @@ func (rl ReadlineReader) readlineInternalSetup() {
 	if rl.echoPrompt {
 		rl.writer.Write([]byte(rl.prompt))
 	}
+
+	rl.checkSignals()
+}
+
+// nb: assumes READLINE_CALLBACKS is defined
+func (rl ReadlineReader) readlineInternalCharloop() (err error) {
+	for rl.done != true {
+		err = rl.readlineInternalChar()
+	}
+
+	return err
+}
+
+// assumes that READLINE_CALLBACKS is true
+func (rl ReadlineReader) readlineInternalChar() (err error) {
+	var lastc string
+
+	lk := rl.lastCommandWasKill()
+	code := false // was: setjmp (_rl_top_level)
+	if code {
+		// *rl_redisplay_function()
+	}
+
+	rlPendingInput := false
+	if rlPendingInput {
+		rl.resetArgument()
+		rl.keySequenceLength = 0
+	}
+
+	rl.setState(rlStateReadCmd)
+	char, err := rl.readKey()
+	rl.unsetState(rlStateReadCmd)
+
+	/* look at input.c:rl_getc() for the circumstances under which this will
+  be returned; punt immediately on read error without converting it to
+  a newline. */
+	if err != nil {
+		rl.setState(rlStateDone)
+		rl.done = true
+		return
+	}
+
+	/* EOF typed to a non-blank line is a <NL>. */
+	rl_end := true // FIXME
+	if err == io.EOF && rl_end {
+		char = "\n"
+	}
+
+  /* The character _rl_eof_char typed to blank line, and not as the
+     previous character is interpreted as EOF. */
+	rlEOFchar := "NOT IMPLEMENTED" // CTRL("D") // ("D" & 0x1f)
+	if ((char == rlEOFchar && lastc != char) || (err == io.EOF)) && !rl_end {
+		rl.setState(rlStateDone)
+		return
+	}
+
+	lastc = char
+
+	keymap := new(map[string]string)
+	rl.dispatch(char, keymap)
+	rl.checkSignals()
+
+	/* If there was no change in _rl_last_command_was_kill, then no kill
+  has taken place.  Note that if input is pending we are reading
+  a prefix command, so nothing has changed yet. */
+	pendingInput := false
+	if !pendingInput && lk == rl.lastCommandWasKill() {
+		// set lastCommandWasKill to false
+	}
+
+	rl.internalCharClean()
+
+	return
+}
+
+func (rl ReadlineReader) internalCharClean() {
+	// TODO: implement me
+}
+
+func (rl ReadlineReader) dispatch(char string, keymap interface{}) {
+	// TODO: implement me
+}
+
+func (rl ReadlineReader) readKey() (string, error) {
+	return "", io.EOF // TODO: implement me
+}
+
+const (
+	rlStateNone             = iota // before first call
+	rlStateInitializing     = iota // during initialization
+	rlStateInitialized      = iota // after init
+	rlStateTerminalPrepared = iota // terminal is prepped
+	rlStateReadCmd          = iota // /* reading a command key */
+	rlStateMetaNext         = iota // reading input after ESC
+	rlStateDispatching      = iota // dispatching to a command
+	rlStateMoreInput        = iota // reading more input in a command function
+	rlStateISearch          = iota // incremental search
+	rlStateNSearch          = iota // non-inc search
+	rlStateSearch           = iota // history search
+	rlStateNumericArg       = iota // reading numeric argument
+	rlStateMacroInput       = iota // getting input from a macro
+	rlStateMacroDef         = iota // defining keyboard macro
+	rlStateOverWrite        = iota // overwrite mode
+	rlStateCompleting       = iota // doing completion
+	rlStateSigHandler       = iota // in readline sighandler
+	rlStateUndoing          = iota // undoing previous state
+	rlStateInputPending     = iota /* rl_execute_next called */
+	rlStateTTYCSaved        = iota /* tty special chars saved */
+	rlStateCallback         = iota /* using the callback interface */
+	rlStateVimotion         = iota /* reading vi motion arg */
+	rlStateMultiKey         = iota /* reading multiple-key command */
+	rlStateVimDonce         = iota /* entered vi command mode at least once */
+	rlStateRedisplaying     = iota /* updating terminal display */
+	rlStateDone             = iota /* done; accepted line */
+)
+
+func (rl ReadlineReader) setState(state int) {
+	// TODO: implement me
+}
+
+func (rl ReadlineReader) unsetState(state int) {
+	// TODO: implement me
+}
+
+func (rl ReadlineReader) lastCommandWasKill() bool {
+	// TODO: implement me
+	return false
+}
+
+func (rl ReadlineReader) resetArgument() {
+	// TODO: implement me
+	return
+}
+
+var rL_IM_INSERT int = 1
+
+func (rl ReadlineReader) readlineInternalTeardown(err error) string {
+	rl.checkSignals()
+
+	// TODO: restore the original history line, iff the line we are editing was originally in the history
+
+	// restore normal cursor, if available
+	rl.setInsertMode(rL_IM_INSERT, 0)
+
+	if err != nil {
+		return ""
+	} else {
+		return rl.saveString("") // wat; the_line global?
+	}
+}
+
+// STATE
+func (rl ReadlineReader) saveString(line string) string {
+	return ""
+}
+
+// MODES
+func (rl ReadlineReader) setInsertMode(mode, arg int) {
+
+}
+
+// SIGNALS
+func (rl ReadlineReader) setSignals() {
+
+}
+
+func (rl ReadlineReader) clearSignals() {
+
+}
+
+func (rl ReadlineReader) checkSignals() {
+
 }
 
 // /* **************************************************************** */

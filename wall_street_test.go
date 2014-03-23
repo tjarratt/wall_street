@@ -3,8 +3,8 @@ package wall_street_test
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	. "wall_street/testhelpers"
 	. "wall_street"
+	. "wall_street/testhelpers"
 )
 
 var _ = Describe("Wall Street", func() {
@@ -62,6 +62,10 @@ var _ = Describe("Wall Street", func() {
 
 				Expect(output).To(Equal([]string{"Developer, what is best in life?"}))
 			})
+		})
+
+		Describe("signals", func() {
+
 		})
 	})
 })
