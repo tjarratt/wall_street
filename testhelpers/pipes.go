@@ -16,7 +16,7 @@ func SimulatePipes(reader *wall_street.ReadlineReader, input string, block func(
 
 	go func() {
 		defer out.Close()
-		out.Write([]byte(input))
+		out.Write([]byte(input + "\n"))
 	}()
 
 	return CaptureSTDOUT(reader, func() { block() })
