@@ -63,9 +63,5 @@ var _ = Describe("Wall Street", func() {
 				Expect(output).To(Equal([]string{"Developer, what is best in life?"}))
 			})
 		})
-
-		Describe("signals", func() {
-
-		})
 	})
 })
