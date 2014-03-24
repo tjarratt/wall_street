@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"io"
 	"os"
-	"wall_street/tty"
+	"github.com/tjarratt/wall_street/tty"
 )
 
 type ReadlineReader struct {

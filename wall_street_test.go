@@ -3,8 +3,8 @@ package wall_street_test
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	. "wall_street"
-	. "wall_street/testhelpers"
+	. "github.com/tjarratt/wall_street"
+	. "github.com/tjarratt/wall_street/testhelpers"
 )
 
 var _ = Describe("Wall Street", func() {

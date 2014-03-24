@@ -6,7 +6,7 @@ import(
   "io"
 	"os"
   "strings"
-  "wall_street"
+  "github.com/tjarratt/wall_street"
 )
 
 func SimulatePipes(reader *wall_street.ReadlineReader, input string, block func()) []string {
