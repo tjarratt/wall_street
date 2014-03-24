@@ -1,0 +1,9 @@
+language: go
+go:
+- 1.2
+before_install:
+- GOPATH=`pwd` go get github.com/onsi/ginkgo/ginkgo
+script: GOPATH=`pwd`:$GOPATH bin/ginkgo -r
+branches:
+  only:
+  - master
