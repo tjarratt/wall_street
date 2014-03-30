@@ -2,9 +2,9 @@ package wall_street
 
 import (
 	"bytes"
+	"github.com/tjarratt/wall_street/tty"
 	"io"
 	"os"
-	"github.com/tjarratt/wall_street/tty"
 )
 
 type ReadlineReader struct {
@@ -78,7 +78,7 @@ func (rl ReadlineReader) readlineInternal() string {
 		panic("unimplemented")
 	}
 
-	str = str[0:len(str)-1]
+	str = str[0 : len(str)-1]
 
 	if rl.echoToStdout {
 		rl.writer.Write([]byte(str))
