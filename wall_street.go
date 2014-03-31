@@ -14,10 +14,6 @@ type ReadlineReader struct {
 	echoToStdout bool
 	echoPrompt   bool
 	prompt       string
-
-	done bool
-
-	keySequenceLength int
 }
 
 func NewReadline() *ReadlineReader {
