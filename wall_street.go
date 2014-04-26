@@ -65,7 +65,7 @@ func (rl *ReadlineReader) Readline(prompt string) (value string) {
 	return value
 }
 
-func (rl ReadlineReader) readlineInternal() string {
+func (rl *ReadlineReader) readlineInternal() string {
 	// readline_internal_setup
 	// eof = readline_internal_charloop
 	// returns readline_internal_teardown(eof)
@@ -81,13 +81,23 @@ func (rl ReadlineReader) readlineInternal() string {
 	str = str[0 : len(str)-1]
 
 	if rl.echoToStdout {
-		rl.writer.Write([]byte(str))
+		if rl.MaskUserInput {
+			var mask string
+			for i := 0; i < len(rl.prompt); i++ {
+				mask = mask + rl.MaskChar
+			}
+			rl.writer.Write([]byte(mask))
+		} else {
+			rl.writer.Write([]byte(str))
+		}
 	}
 
 	return str
 }
 
-func (rl ReadlineReader) readlineInternalSetup() {
+
+
+func (rl *ReadlineReader) readlineInternalSetup() {
 	if rl.echoPrompt {
 		rl.writer.Write([]byte(rl.prompt))
 	}
@@ -95,11 +105,11 @@ func (rl ReadlineReader) readlineInternalSetup() {
 	rl.checkSignals()
 }
 
-func (rl ReadlineReader) internalCharClean() {
+func (rl *ReadlineReader) internalCharClean() {
 	// TODO: implement me
 }
 
-func (rl ReadlineReader) dispatch(char string, keymap interface{}) {
+func (rl *ReadlineReader) dispatch(char string, keymap interface{}) {
 	// TODO: implement me
 }
 
@@ -132,20 +142,20 @@ const (
 	rlStateDone             = iota /* done; accepted line */
 )
 
-func (rl ReadlineReader) setState(state int) {
+func (rl *ReadlineReader) setState(state int) {
 	// TODO: implement me
 }
 
-func (rl ReadlineReader) unsetState(state int) {
+func (rl *ReadlineReader) unsetState(state int) {
 	// TODO: implement me
 }
 
-func (rl ReadlineReader) lastCommandWasKill() bool {
+func (rl *ReadlineReader) lastCommandWasKill() bool {
 	// TODO: implement me
 	return false
 }
 
-func (rl ReadlineReader) resetArgument() {
+func (rl *ReadlineReader) resetArgument() {
 	// TODO: implement me
 	return
 }
@@ -153,25 +163,25 @@ func (rl ReadlineReader) resetArgument() {
 var rL_IM_INSERT int = 1
 
 // STATE
-func (rl ReadlineReader) saveString(line string) string {
+func (rl *ReadlineReader) saveString(line string) string {
 	return ""
 }
 
 // MODES
-func (rl ReadlineReader) setInsertMode(mode, arg int) {
+func (rl *ReadlineReader) setInsertMode(mode, arg int) {
 
 }
 
 // SIGNALS
-func (rl ReadlineReader) setSignals() {
+func (rl *ReadlineReader) setSignals() {
 
 }
 
-func (rl ReadlineReader) clearSignals() {
+func (rl *ReadlineReader) clearSignals() {
 
 }
 
-func (rl ReadlineReader) checkSignals() {
+func (rl *ReadlineReader) checkSignals() {
 
 }
 
