@@ -63,5 +63,27 @@ var _ = Describe("Wall Street", func() {
 				Expect(output).To(Equal([]string{"Developer, what is best in life?"}))
 			})
 		})
+
+		Describe("masking user input", func() {
+			var (
+				stdout []string
+				theAnswer string
+			)
+
+			BeforeEach(func() {
+				reader.MaskUserInput = true
+				stdout = SimulatePipes(reader, "terrible secrets", func() {
+					theAnswer = reader.Readline("Tell me a secret")
+				})
+			})
+
+			FIt("changes characters passed to stdout to asterisks", func() {
+				Expect(stdout).To(Equal([]string{"****************"}))
+			})
+
+			It("returns user input, unchanged", func() {
+				Expect(theAnswer).To(Equal("terrible secrets"))
+			})
+		})
 	})
 })

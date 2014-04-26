@@ -14,6 +14,9 @@ type ReadlineReader struct {
 	echoToStdout bool
 	echoPrompt   bool
 	prompt       string
+
+	MaskUserInput bool
+	MaskChar string
 }
 
 func NewReadline() *ReadlineReader {
@@ -22,6 +25,7 @@ func NewReadline() *ReadlineReader {
 		writer:       os.Stdout,
 		echoToStdout: true,
 		echoPrompt:   true,
+		MaskChar: "*",
 	}
 }
 
