@@ -1,7 +1,6 @@
 package wall_street
 
 import (
-	"bytes"
 	"github.com/tjarratt/wall_street/tty"
 	"io"
 	"os"
@@ -71,14 +70,20 @@ func (rl *ReadlineReader) readlineInternal() string {
 	// returns readline_internal_teardown(eof)
 	rl.readlineInternalSetup()
 
-	var buf bytes.Buffer
-	io.Copy(&buf, rl.reader)
-	str := buf.String()
-	if str[len(str)-1] != '\n' {
-		panic("unimplemented")
-	}
+	buffer := make([]byte, 0)
 
-	str = str[0 : len(str)-1]
+	for {
+		charBuffer := make([]byte, 1, 1)
+		_, err := rl.reader.Read(charBuffer)
+		if err != nil {
+			panic("unimplemented: error during ReadAll")
+		}
+		if string(charBuffer) == "\n" {
+			break
+		}
+
+		buffer = append(buffer, charBuffer...)
+	}
 
 	if rl.echoToStdout {
 		if rl.MaskUserInput {
@@ -88,11 +93,11 @@ func (rl *ReadlineReader) readlineInternal() string {
 			}
 			rl.writer.Write([]byte(mask))
 		} else {
-			rl.writer.Write([]byte(str))
+			rl.writer.Write(buffer)
 		}
 	}
 
-	return str
+	return string(buffer)
 }
 
 
