@@ -77,7 +77,7 @@ var _ = Describe("Wall Street", func() {
 				})
 			})
 
-			FIt("changes characters passed to stdout to asterisks", func() {
+			It("changes characters passed to stdout to asterisks", func() {
 				Expect(stdout).To(Equal([]string{"****************"}))
 			})
 
