@@ -1,6 +1,8 @@
 package wall_street_test
 
 import (
+	"fmt"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/tjarratt/wall_street"
@@ -66,7 +68,7 @@ var _ = Describe("Wall Street", func() {
 
 		Describe("masking user input", func() {
 			var (
-				stdout []string
+				stdout    []string
 				theAnswer string
 			)
 
@@ -83,6 +85,17 @@ var _ = Describe("Wall Street", func() {
 
 			It("returns user input, unchanged", func() {
 				Expect(theAnswer).To(Equal("terrible secrets"))
+			})
+		})
+
+		Describe("control characters", func() {
+			It("omits them from the output", func() {
+				userInput := fmt.Sprintf("%s%s%s%s%s%s%s%sselect start", Up, Up, Down, Down, Left, Right, Left, Right)
+				stdout := SimulatePipes(reader, userInput, func() {
+					Expect(reader.Readline("Konami code")).To(Equal("select start"))
+				})
+
+				Expect(stdout).To(Equal([]string{"select start"}))
 			})
 		})
 	})

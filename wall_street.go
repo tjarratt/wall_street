@@ -4,6 +4,7 @@ import (
 	"github.com/tjarratt/wall_street/tty"
 	"io"
 	"os"
+	"strings"
 )
 
 type ReadlineReader struct {
@@ -15,7 +16,7 @@ type ReadlineReader struct {
 	prompt       string
 
 	MaskUserInput bool
-	MaskChar string
+	MaskChar      string
 }
 
 func NewReadline() *ReadlineReader {
@@ -24,7 +25,7 @@ func NewReadline() *ReadlineReader {
 		writer:       os.Stdout,
 		echoToStdout: true,
 		echoPrompt:   true,
-		MaskChar: "*",
+		MaskChar:     "*",
 	}
 }
 
@@ -70,15 +71,28 @@ func (rl *ReadlineReader) readlineInternal() string {
 	// returns readline_internal_teardown(eof)
 	rl.readlineInternalSetup()
 
+	eof := false
 	buffer := make([]byte, 0)
 
-	for {
-		charBuffer := make([]byte, 1, 1)
-		_, err := rl.reader.Read(charBuffer)
-		if err != nil {
-			panic("unimplemented: error during ReadAll")
+	for eof == false {
+		charBuffer := make([]byte, 3, 3)
+		bytesRead, err := rl.reader.Read(charBuffer)
+
+		if err != nil && err.Error() == "EOF" {
+			eof = true
+			err = nil
+
+			charBuffer = charBuffer[0:bytesRead]
 		}
-		if string(charBuffer) == "\n" {
+
+		if err != nil {
+			panic("unimplemented: error during ReadAll: " + err.Error())
+		}
+
+		charBuffer = stripControlCharacters(charBuffer)
+		size := len(charBuffer)
+
+		if (size > 0 && string(charBuffer[size-1]) == "\n") || eof {
 			break
 		}
 
@@ -100,14 +114,35 @@ func (rl *ReadlineReader) readlineInternal() string {
 	return string(buffer)
 }
 
-
-
 func (rl *ReadlineReader) readlineInternalSetup() {
 	if rl.echoPrompt {
 		rl.writer.Write([]byte(rl.prompt))
 	}
 
 	rl.checkSignals()
+}
+
+const (
+	Up    string = "^[A"
+	Down  string = "^[B"
+	Right string = "^[C"
+	Left  string = "^[D"
+)
+
+func stripControlCharacters(buffer []byte) []byte {
+	str := string(buffer)
+	str = strings.Replace(str, Up, "", -1)
+	str = strings.Replace(str, Down, "", -1)
+	str = strings.Replace(str, Left, "", -1)
+	str = strings.Replace(str, Right, "", -1)
+
+	ret := []byte{}
+	for _, bit := range []byte(str) {
+		if bit != byte(0) {
+			ret = append(ret, bit)
+		}
+	}
+	return ret
 }
 
 func (rl *ReadlineReader) internalCharClean() {
