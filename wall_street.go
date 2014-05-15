@@ -1,10 +1,11 @@
 package wall_street
 
 import (
-	"github.com/tjarratt/wall_street/tty"
 	"io"
 	"os"
 	"strings"
+
+	"github.com/tjarratt/wall_street/tty"
 )
 
 type ReadlineReader struct {
@@ -93,6 +94,7 @@ func (rl *ReadlineReader) readlineInternal() string {
 		size := len(charBuffer)
 
 		if (size > 0 && string(charBuffer[size-1]) == "\n") || eof {
+			buffer = append(buffer, charBuffer[0:size-1]...)
 			break
 		}
 
