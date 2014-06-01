@@ -104,7 +104,7 @@ func (rl *ReadlineReader) readlineInternal() string {
 	if rl.echoToStdout {
 		if rl.MaskUserInput {
 			var mask string
-			for i := 0; i < len(rl.prompt); i++ {
+			for i := 0; i < len(buffer); i++ {
 				mask = mask + rl.MaskChar
 			}
 			rl.writer.Write([]byte(mask))

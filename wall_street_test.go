@@ -75,7 +75,7 @@ var _ = Describe("Wall Street", func() {
 			BeforeEach(func() {
 				reader.MaskUserInput = true
 				stdout = SimulatePipes(reader, "terrible secrets", func() {
-					theAnswer = reader.Readline("Tell me a secret")
+					theAnswer = reader.Readline("Tell me a saucy secret")
 				})
 			})
 
