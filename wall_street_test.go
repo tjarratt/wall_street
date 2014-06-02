@@ -7,6 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 	. "github.com/tjarratt/wall_street"
 	. "github.com/tjarratt/wall_street/testhelpers"
+	"github.com/tjarratt/wall_street/testhelpers/fakes"
 )
 
 var _ = Describe("Wall Street", func() {
@@ -70,10 +71,14 @@ var _ = Describe("Wall Street", func() {
 			var (
 				stdout    []string
 				theAnswer string
+				fakeEcho  *fakes.Echoer
 			)
 
 			BeforeEach(func() {
 				reader.MaskUserInput = true
+				fakeEcho = &fakes.Echoer{}
+				reader.Echo = fakeEcho
+
 				stdout = SimulatePipes(reader, "terrible secrets", func() {
 					theAnswer = reader.Readline("Tell me a saucy secret")
 				})
@@ -85,6 +90,15 @@ var _ = Describe("Wall Street", func() {
 
 			It("returns user input, unchanged", func() {
 				Expect(theAnswer).To(Equal("terrible secrets"))
+			})
+
+			It("disables the echo in the tty", func() {
+				Expect(fakeEcho.DisableCallCount()).To(Equal(1))
+			})
+
+			It("enables the echo in the tty when it's done", func() {
+				Expect(fakeEcho.EnableCallCount()).To(Equal(1))
+				Expect(fakeEcho.CurrentState).To(Equal("enabled"))
 			})
 		})
 

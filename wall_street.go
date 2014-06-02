@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/tjarratt/wall_street/echo"
 	"github.com/tjarratt/wall_street/tty"
 )
 
@@ -15,6 +16,8 @@ type ReadlineReader struct {
 	echoToStdout bool
 	echoPrompt   bool
 	prompt       string
+
+	Echo echo.Echoer
 
 	MaskUserInput bool
 	MaskChar      string
@@ -27,6 +30,7 @@ func NewReadline() *ReadlineReader {
 		echoToStdout: true,
 		echoPrompt:   true,
 		MaskChar:     "*",
+		Echo:         echo.NewEchoer(),
 	}
 }
 
@@ -67,9 +71,12 @@ func (rl *ReadlineReader) Readline(prompt string) (value string) {
 }
 
 func (rl *ReadlineReader) readlineInternal() string {
-	// readline_internal_setup
-	// eof = readline_internal_charloop
-	// returns readline_internal_teardown(eof)
+	if rl.MaskUserInput {
+		fileDescriptors := []uintptr{os.Stdin.Fd(), os.Stdout.Fd(), os.Stderr.Fd()}
+		rl.Echo.Disable(fileDescriptors)
+		defer rl.Echo.Enable(fileDescriptors)
+	}
+
 	rl.readlineInternalSetup()
 
 	eof := false
